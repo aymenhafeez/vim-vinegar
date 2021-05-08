@@ -127,3 +127,25 @@ function! s:setup_vinegar() abort
   exe 'syn match netrwSuffixes =\%(\S\+ \)*\S\+\%('.join(map(split(&suffixes, ','), s:escape), '\|') . '\)[*@]\=\S\@!='
   hi def link netrwSuffixes SpecialKey
 endfunction
+
+" Close all empty buffers
+" Called with :Lex to close the empty buffers it creates
+function! DeleteEmptyBuffers() abort
+  let [i, n; empty] = [1, bufnr('$')]
+  while i <= n
+    if bufloaded(i) && bufname(i) == '' && getbufline(i, 1, 2) == ['']
+      call add(empty, i)
+    endif
+    let i += 1
+  endwhile
+  if len(empty) > 0
+    exe 'bdelete' join(empty)
+  endif
+endfunction
+
+augroup NetrwMappings
+  autocmd Filetype netrw nnoremap <silent> <Plug><CR> :call DeleteEmptyBuffers<CR>
+  autocmd Filetype netrw nnoremap <silent> <Plug><leader>- :Lexplore<CR>:call DeleteEmptyBuffers<CR>
+  autocmd Filetype netrw nnoremap <buffer> <C-l> <C-w>l
+  autocmd Filetype netrw nnoremap <buffer> <C-r> :Rex<CR>
+augroup END
